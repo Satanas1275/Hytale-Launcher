@@ -12,6 +12,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      # -----------------------------
+      # CHECKOUT
+      # -----------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -112,25 +115,31 @@ jobs:
           }
 
           $sep = if ($env:RUNNER_OS -eq 'Windows') { ';' } else { ':' }
-          $addDataArgs = @()
+
+          $args = @(
+            "--onefile"
+            "--noconsole"
+            "-n"
+            "app"
+          )
 
           if (Test-Path templates) {
-            $addDataArgs += "--add-data `"templates${sep}templates`""
+            $args += "--add-data"
+            $args += "templates${sep}templates"
             Write-Host "Including templates/"
           }
 
           if (Test-Path static) {
-            $addDataArgs += "--add-data `"static${sep}static`""
+            $args += "--add-data"
+            $args += "static${sep}static"
             Write-Host "Including static/"
           }
 
-          Write-Host "Running PyInstaller..."
-          pyinstaller `
-            --onefile `
-            --noconsole `
-            $addDataArgs `
-            -n app `
-            app.py
+          # Script principal
+          $args += "app.py"
+
+          Write-Host "Running: pyinstaller $($args -join ' ')"
+          pyinstaller @args
 
       # -----------------------------
       # PACKAGE RELEASE ZIP
