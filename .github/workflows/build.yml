@@ -51,7 +51,7 @@ jobs:
                 npx esbuild main.js --bundle --minify --outfile=dist/main.js
               } elseif (Test-Path src\main.js) {
                 npm i -D esbuild
-                npx esbuild src\main.js --bundle --minify --outfile=dist/main.js
+                npx esbuild main.js --bundle --minify --outfile=dist/main.js --platform=node
               } else {
                 Write-Host "No JS entry found (main.js or src/main.js). Skipping JS bundling."
               }
