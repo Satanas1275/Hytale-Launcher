@@ -1,7 +1,3 @@
-# GitHub Actions workflow: build_release.yml
-# Manual dispatch only - builds Python onefile (no console),
-# bundles JS for Node (Electron-safe) and uploads a .zip artifact
-
 on:
   workflow_dispatch:
 
@@ -30,13 +26,9 @@ jobs:
         shell: pwsh
         run: |
           if (Test-Path requirements.txt) {
-            Write-Host "Installing requirements.txt..."
+            Write-Host "Installing Python requirements..."
             pip install -r requirements.txt
-          } else {
-            Write-Host "No requirements.txt found."
           }
-
-          Write-Host "Installing PyInstaller..."
           pip install pyinstaller
 
       # -----------------------------
@@ -48,80 +40,47 @@ jobs:
           node-version: '18'
 
       # -----------------------------
-      # JAVASCRIPT BUILD (NODE SAFE)
+      # JAVASCRIPT BUILD (Node / Electron safe)
       # -----------------------------
-      - name: Build JavaScript (npm build or esbuild fallback)
+      - name: Build JavaScript (esbuild fallback)
         shell: pwsh
         run: |
           if (Test-Path package.json) {
-            Write-Host "package.json found -> installing npm deps"
             npm ci
-
             $pkg = Get-Content package.json -Raw | ConvertFrom-Json
             if ($pkg.scripts -and $pkg.scripts.build) {
-              Write-Host "Running npm run build..."
               npm run build
             } else {
-              Write-Host "No build script. Bundling with esbuild (platform=node)..."
+              Write-Host "No build script, bundling main.js..."
               npm i -D esbuild
-
               if (Test-Path main.js) {
-                npx esbuild main.js `
-                  --bundle `
-                  --minify `
-                  --platform=node `
-                  --target=node18 `
-                  --outfile=dist/main.js
-              }
-              elseif (Test-Path src\main.js) {
-                npx esbuild src/main.js `
-                  --bundle `
-                  --minify `
-                  --platform=node `
-                  --target=node18 `
-                  --outfile=dist/main.js
-              }
-              else {
-                Write-Host "No JS entry found (main.js or src/main.js)."
+                npx esbuild main.js --bundle --minify --platform=node --target=node18 --outfile=dist/main.js
+              } elseif (Test-Path src\main.js) {
+                npx esbuild src/main.js --bundle --minify --platform=node --target=node18 --outfile=dist/main.js
+              } else {
+                Write-Host "No JS entry found."
               }
             }
-          }
-          else {
-            Write-Host "No package.json. Using esbuild directly if possible..."
-            if (Test-Path main.js) {
-              npm init -y
-              npm i -D esbuild
-
-              npx esbuild main.js `
-                --bundle `
-                --minify `
-                --platform=node `
-                --target=node18 `
-                --outfile=dist/main.js
-            } else {
-              Write-Host "No JavaScript found. Skipping JS build."
-            }
+          } elseif (Test-Path main.js) {
+            npm init -y
+            npm i -D esbuild
+            npx esbuild main.js --bundle --minify --platform=node --target=node18 --outfile=dist/main.js
           }
 
       # -----------------------------
-      # PYTHON BUILD (ONEFILE)
+      # PYTHON BUILD (ONEFILE, templates/static inclus)
       # -----------------------------
       - name: Build Python onefile (PyInstaller, no console)
         shell: pwsh
         run: |
           if (-not (Test-Path app.py)) {
-            Write-Error "app.py not found at repository root."
+            Write-Error "app.py not found!"
             exit 1
           }
 
           $sep = if ($env:RUNNER_OS -eq 'Windows') { ';' } else { ':' }
 
-          $args = @(
-            "--onefile"
-            "--noconsole"
-            "-n"
-            "app"
-          )
+          $args = @("--onefile", "--noconsole", "-n", "HytaleLauncherBackend")
 
           if (Test-Path templates) {
             $args += "--add-data"
@@ -135,7 +94,6 @@ jobs:
             Write-Host "Including static/"
           }
 
-          # Script principal
           $args += "app.py"
 
           Write-Host "Running: pyinstaller $($args -join ' ')"
@@ -150,32 +108,19 @@ jobs:
           Remove-Item -Recurse -Force release_output -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path release_output | Out-Null
 
-          # Python binary
-          if (Test-Path dist\app.exe) {
-            Copy-Item dist\app.exe release_output\ -Force
-            Write-Host "Copied app.exe"
+          # Backend exe
+          if (Test-Path dist\HytaleLauncherBackend.exe) {
+            Copy-Item dist\HytaleLauncherBackend.exe release_output\ -Force
           }
 
-          # JS output
+          # JS bundle
           if (Test-Path dist\main.js) {
-            Copy-Item dist\main.js release_output\ -Force
-            Write-Host "Copied bundled JS"
+            Copy-Item dist\main.js release_output\HytaleLauncher.exe -Force
           }
 
-          # Optional runtime assets
-          if (Test-Path templates) {
-            Copy-Item templates release_output\templates -Recurse -Force
-          }
-          if (Test-Path static) {
-            Copy-Item static release_output\static -Recurse -Force
-          }
-
-          Compress-Archive `
-            -Path release_output\* `
-            -DestinationPath app-release.zip `
-            -Force
-
-          Write-Host "Created app-release.zip"
+          # Create ZIP
+          Compress-Archive -Path release_output\* -DestinationPath HytaleLauncher-release.zip -Force
+          Write-Host "Created HytaleLauncher-release.zip"
 
       # -----------------------------
       # UPLOAD ARTIFACT
@@ -183,5 +128,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: app-release.zip
+          name: HytaleLauncher-release
+          path: HytaleLauncher-release.zip
