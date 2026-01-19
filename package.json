@@ -1,22 +1,32 @@
 {
   "name": "hytale-launcher",
   "version": "1.0.0",
-  "description": "",
+  "description": "Hytale Launcher",
   "main": "main.js",
+  "author": "Satanas1275",
+  "license": "MIT",
+
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder"
   },
+
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^26.4.0"
+  },
+
   "build": {
-    "appId": "com.hytale.launcher",
+    "appId": "com.satanas.hytale",
+    "productName": "HytaleLauncher",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*"
+    ],
     "win": {
       "target": "nsis"
     }
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "axios": "^1.13.2",
-    "electron": "^40.0.0"
   }
 }
