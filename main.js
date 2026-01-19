@@ -9,7 +9,7 @@ let serverProcess;
 // Chemin vers Python ou le serveur compilé
 const isWindows = process.platform === 'win32';
 const pythonExecutable = isWindows ? 'python' : 'python3'; // ou python si tu veux
-const serverScript = path.join(__dirname, 'app.py'); // ou HytaleServer.exe si compilé
+const serverScript = path.join(__dirname, 'HytaleLauncherBackend.exe'); // ou HytaleServer.exe si compilé
 
 function createWindow() {
     mainWindow = new BrowserWindow({
