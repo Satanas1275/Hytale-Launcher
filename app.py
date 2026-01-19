@@ -31,7 +31,7 @@ MIRRORS_GAME = [
 
 def load_config():
     if not os.path.exists(CONFIG_FILE):
-        return {"install_path": "C:/Hytale"}
+        return {"install_path": "C:/Users/Public/game/hytale"}
     with open(CONFIG_FILE, "r") as f:
         return json.load(f)
 
