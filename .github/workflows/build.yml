@@ -1,7 +1,6 @@
+name: Build HytaleLauncher (Electron + Python)
 on:
   workflow_dispatch:
-
-name: Build release (onefile + JS bundle)
 
 jobs:
   build:
@@ -15,24 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       # -----------------------------
-      # PYTHON SETUP
-      # -----------------------------
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install Python deps and PyInstaller
-        shell: pwsh
-        run: |
-          if (Test-Path requirements.txt) {
-            Write-Host "Installing Python requirements..."
-            pip install -r requirements.txt
-          }
-          pip install pyinstaller
-
-      # -----------------------------
-      # NODE SETUP
+      # SETUP NODE.JS
       # -----------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -40,87 +22,88 @@ jobs:
           node-version: '18'
 
       # -----------------------------
-      # JAVASCRIPT BUILD (Node / Electron safe)
+      # INSTALL NPM DEPENDENCIES
       # -----------------------------
-      - name: Build JavaScript (esbuild fallback)
-        shell: pwsh
+      - name: Install NPM deps
         run: |
-          if (Test-Path package.json) {
-            npm ci
-            $pkg = Get-Content package.json -Raw | ConvertFrom-Json
-            if ($pkg.scripts -and $pkg.scripts.build) {
-              npm run build
-            } else {
-              Write-Host "No build script, bundling main.js..."
-              npm i -D esbuild
-              if (Test-Path main.js) {
-                npx esbuild main.js --bundle --minify --platform=node --target=node18 --outfile=dist/main.js
-              } elseif (Test-Path src\main.js) {
-                npx esbuild src/main.js --bundle --minify --platform=node --target=node18 --outfile=dist/main.js
-              } else {
-                Write-Host "No JS entry found."
-              }
-            }
-          } elseif (Test-Path main.js) {
-            npm init -y
-            npm i -D esbuild
-            npx esbuild main.js --bundle --minify --platform=node --target=node18 --outfile=dist/main.js
-          }
+          npm ci
 
       # -----------------------------
-      # PYTHON BUILD (ONEFILE, templates/static inclus)
+      # SETUP PYTHON
       # -----------------------------
-      - name: Build Python onefile (PyInstaller, no console)
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps and PyInstaller
+        run: |
+          if (Test-Path requirements.txt) {
+            pip install -r requirements.txt
+          }
+          pip install pyinstaller
+
+      # -----------------------------
+      # BUILD PYTHON BACKEND
+      # -----------------------------
+      - name: Build Python backend (onefile)
         shell: pwsh
         run: |
-          if (-not (Test-Path app.py)) {
-            Write-Error "app.py not found!"
-            exit 1
-          }
-
           $sep = if ($env:RUNNER_OS -eq 'Windows') { ';' } else { ':' }
-
           $args = @("--onefile", "--noconsole", "-n", "HytaleLauncherBackend")
 
           if (Test-Path templates) {
             $args += "--add-data"
             $args += "templates${sep}templates"
-            Write-Host "Including templates/"
           }
-
           if (Test-Path static) {
             $args += "--add-data"
             $args += "static${sep}static"
-            Write-Host "Including static/"
           }
 
           $args += "app.py"
-
-          Write-Host "Running: pyinstaller $($args -join ' ')"
           pyinstaller @args
 
       # -----------------------------
-      # PACKAGE RELEASE ZIP
+      # COPY PYTHON BACKEND INTO ELECTRON RESOURCES
       # -----------------------------
-      - name: Prepare release ZIP
+      - name: Copy backend into Electron
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force electron-app/resources/backend -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path electron-app/resources/backend | Out-Null
+          Copy-Item dist/HytaleLauncherBackend.exe electron-app/resources/backend/ -Force
+
+      # -----------------------------
+      # BUILD ELECTRON APP
+      # -----------------------------
+      - name: Build Electron app with electron-builder
+        shell: pwsh
+        run: |
+          cd electron-app
+          npm install
+          npx electron-builder --windows --x64 --publish never
+          cd ..
+
+      # -----------------------------
+      # COLLECT OUTPUTS
+      # -----------------------------
+      - name: Collect release files
         shell: pwsh
         run: |
           Remove-Item -Recurse -Force release_output -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path release_output | Out-Null
 
-          # Backend exe
-          if (Test-Path dist\HytaleLauncherBackend.exe) {
-            Copy-Item dist\HytaleLauncherBackend.exe release_output\ -Force
+          # Electron exe
+          $exePath = Get-ChildItem electron-app/dist/win-unpacked/*.exe | Select-Object -First 1
+          Copy-Item $exePath.FullName release_output/HytaleLauncher.exe -Force
+
+          # Backend exe (optionnel si tu veux le garder séparé)
+          if (Test-Path dist/HytaleLauncherBackend.exe) {
+            Copy-Item dist/HytaleLauncherBackend.exe release_output/ -Force
           }
 
-          # JS bundle
-          if (Test-Path dist\main.js) {
-            Copy-Item dist\main.js release_output\HytaleLauncher.exe -Force
-          }
-
-          # Create ZIP
           Compress-Archive -Path release_output\* -DestinationPath HytaleLauncher-release.zip -Force
-          Write-Host "Created HytaleLauncher-release.zip"
 
       # -----------------------------
       # UPLOAD ARTIFACT
