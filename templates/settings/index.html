@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings - Hytale Launcher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li>
+                <a class="home" href="/"><img src="{{ url_for('static', filename='png/home.png') }}"></a>
+            </li>
+            <li>
+                <a class="account" href="/account"><img src="{{ url_for('static', filename='png/account.png') }}"></a>
+            </li>
+            <li>
+                <a class="settings" href="/settings"><img src="{{ url_for('static', filename='png/settings.png') }}"></a>
+            </li>
+        </ul>
+    </nav>
+
+<div id="notification" class="notification hidden"></div>
+
+<main class="content">
+    <h1>Paramètres</h1>
+
+    <section class="settings-box">
+        <label for="installPath">Chemin d'installation</label>
+
+        <input
+            type="text"
+            id="installPath"
+            placeholder="/home/user/Hytale"
+        >
+
+        <button id="saveBtn">Sauvegarder</button>
+    </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+</body>
+</html>

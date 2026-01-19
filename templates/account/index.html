@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Hytale Launcher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li>
+                <a class="home" href="/"><img src="{{ url_for('static', filename='png/home.png') }}"></a>
+            </li>
+            <li>
+                <a class="account" href="/account"><img src="{{ url_for('static', filename='png/account.png') }}"></a>
+            </li>
+            <li>
+                <a class="settings" href="/settings"><img src="{{ url_for('static', filename='png/settings.png') }}"></a>
+            </li>
+        </ul>
+    </nav>
+<div id="notification" class="notification hidden"></div>
+
+<main class="content">
+    <h1>Compte</h1>
+
+<section class="settings-box">
+    <label>UUID (donnée sensible)</label>
+
+    <input
+        type="password"
+        id="uuid"
+        disabled
+    >
+
+    <div class="sensitive-box">
+        <input type="checkbox" id="unlockUuid">
+        <label for="unlockUuid">Modifier une donnée sensible</label>
+    </div>
+
+<div id="uuidWarning" class="warning hidden">
+    ⚠️ <strong>Attention :</strong><br><br>
+
+    Modifier l’UUID change l’identifiant principal de ton compte.
+    Voici ce que cela implique :<br><br>
+
+    <ul>
+        <li>Si tu modifies l’UUID <strong>sans supprimer les dossiers du jeu</strong>, tu pourras récupérer toutes tes données locales (skins, mondes, configs).</li>
+        <li>Si tu fais une <strong>réinstallation complète</strong> et changes l’UUID, tu ne pourras récupérer que la progression serveur. Les skins, mondes et configurations locales seront perdus.</li>
+        <li>Les serveurs reconnaissent ton compte via l’UUID : remettre l’ancien UUID permet de récupérer la progression serveur.</li>
+    </ul>
+
+    <strong>Important :</strong> Cette action est destinée aux utilisateurs avancés.
+</div>
+
+    <label>Nom en jeu</label>
+    <input type="text" id="name">
+
+    <button id="saveBtn">Sauvegarder</button>
+</section>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/account.js') }}"></script>
+</body>
+</html>

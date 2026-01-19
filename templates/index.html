@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Hytale Launcher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li>
+                <a class="home" href="/"><img src="{{ url_for('static', filename='png/home.png') }}"></a>
+            </li>
+            <li>
+                <a class="account" href="/account"><img src="{{ url_for('static', filename='png/account.png') }}"></a>
+            </li>
+            <li>
+                <a class="settings" href="/settings"><img src="{{ url_for('static', filename='png/settings.png') }}"></a>
+            </li>
+        </ul>
+    </nav>
+    
+    <div class="main-container">
+        <h1>Hytale Launcher</h1>
+        
+        <div id="notification" class="notification hidden"></div>
+        
+        <div class="horizontal-layout">
+            <!-- Colonne gauche : Account Info -->
+            <div class="left-column">
+                <div class="account-card">
+                    <div id="account-info" class="account-info"></div>
+                </div>
+            </div>
+            
+            <!-- Colonne droite : News + Play Button -->
+            <div class="right-column">
+                <section class="news">
+                    <h2>Dernières news</h2>
+                    <div id="newsContainer"></div>
+                </section>
+
+                <section class="play-section">
+                    <button id="playBtn" class="play-btn">Chargement...</button>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+npm install --save-dev electron-builder
+
+npx electron-builder --win
